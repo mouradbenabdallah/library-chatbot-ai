@@ -14,8 +14,8 @@ def create_app():
         from app.models import Livre
         db.create_all()
 
-        # Enregistrer les blueprints
-        from app.routes import livres_bp
+        from app.routes import livres_bp, chat_bp
         app.register_blueprint(livres_bp, url_prefix='/api')
+        app.register_blueprint(chat_bp,   url_prefix='/api')
 
     return app
