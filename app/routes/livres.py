@@ -1,65 +1,46 @@
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models.livre import Livre
+from app.models.livre import (
+    get_all_livres,
+    get_livre_by_id,
+    search_livres as search_livres_model,
+    add_livre as add_livre_model,
+    update_livre as update_livre_model,
+    delete_livre as delete_livre_model,
+)
 
 livres_bp = Blueprint('livres', __name__)
 
-# GET tous les livres
+# Retourne l'ensemble du catalogue.
+
 @livres_bp.route('/livres', methods=['GET'])
 def get_livres():
-    livres = Livre.query.all()
-    return jsonify([l.to_dict() for l in livres])
+    return jsonify(get_all_livres())
 
-# GET un livre par ID
 @livres_bp.route('/livres/<int:id>', methods=['GET'])
 def get_livre(id):
-    livre = Livre.query.get_or_404(id)
-    return jsonify(livre.to_dict())
+    livre = get_livre_by_id(id)
+    if livre:
+        return jsonify(livre)
+    return jsonify({'error': 'Livre non trouve'}), 404
 
-# GET recherche par titre ou auteur
+# Recherche des livres par titre ou auteur.
 @livres_bp.route('/livres/search', methods=['GET'])
 def search_livres():
     q = request.args.get('q', '')
-    livres = Livre.query.filter(
-        Livre.titre.ilike(f'%{q}%') |
-        Livre.auteur.ilike(f'%{q}%')
-    ).all()
-    return jsonify([l.to_dict() for l in livres])
+    return jsonify(search_livres_model(q))
 
-# POST ajouter un livre
+# Cree un nouveau livre a partir du JSON recu.
 @livres_bp.route('/livres', methods=['POST'])
 def add_livre():
-    data = request.get_json()
-    livre = Livre(
-        titre     = data['titre'],
-        auteur    = data['auteur'],
-        categorie = data['categorie'],
-        annee     = data['annee'],
-        quantite  = data.get('quantite', 1),
-        statut    = data.get('statut', 'disponible')
-    )
-    db.session.add(livre)
-    db.session.commit()
-    return jsonify(livre.to_dict()), 201
+    return jsonify(add_livre_model(request.get_json())), 201
 
-# PUT modifier un livre
+# Remplace les donnees principales d'un livre existant.
 @livres_bp.route('/livres/<int:id>', methods=['PUT'])
 def update_livre(id):
-    livre = Livre.query.get_or_404(id)
-    data  = request.get_json()
-    livre.titre     = data.get('titre',     livre.titre)
-    livre.auteur    = data.get('auteur',    livre.auteur)
-    livre.categorie = data.get('categorie', livre.categorie)
-    livre.annee     = data.get('annee',     livre.annee)
-    livre.quantite  = data.get('quantite',  livre.quantite)
-    livre.statut    = data.get('statut',    livre.statut)
-    db.session.commit()
-    return jsonify(livre.to_dict())
+    return jsonify(update_livre_model(id, request.get_json()))
 
-# DELETE supprimer un livre
+# Supprime un livre et confirme l'operation.
 @livres_bp.route('/livres/<int:id>', methods=['DELETE'])
 def delete_livre(id):
-    livre = Livre.query.get_or_404(id)
-    db.session.delete(livre)
-    db.session.commit()
-    return jsonify({'message': f'Livre {id} supprimé'})
+    delete_livre_model(id)
+    return jsonify({'message': f'Livre {id} supprime'})

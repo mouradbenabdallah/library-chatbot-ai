@@ -3,6 +3,8 @@ from app.services.chatbot import ask_mistral
 
 chat_bp = Blueprint('chat', __name__)
 
+# Recoit une question utilisateur et renvoie la reponse du modele Mistral.
+
 @chat_bp.route('/chat', methods=['POST'])
 def chat():
     data     = request.get_json()
