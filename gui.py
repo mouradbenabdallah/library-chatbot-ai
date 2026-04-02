@@ -23,11 +23,7 @@ class App(ctk.CTk):
         self.build_chat_tab()
         self.load_livres()
 
-    # ─────────────────────────────────────────
-    #  ONGLET LIVRES
-    # ─────────────────────────────────────────
     def build_livres_tab(self):
-        # Formulaire gauche
         form = ctk.CTkFrame(self.tab_livres, width=300)
         form.pack(side="left", fill="y", padx=10, pady=10)
 
@@ -49,14 +45,12 @@ class App(ctk.CTk):
         ctk.CTkButton(form, text="🗑️  Supprimer", command=self.delete_livre, fg_color="#e74c3c").pack(pady=4, fill="x", padx=10)
         ctk.CTkButton(form, text="🔄 Rafraîchir", command=self.load_livres,  fg_color="#95a5a6").pack(pady=4, fill="x", padx=10)
 
-        # Recherche
         search_frame = ctk.CTkFrame(form)
         search_frame.pack(fill="x", padx=10, pady=8)
         self.e_search = ctk.CTkEntry(search_frame, placeholder_text="Rechercher...", width=180)
         self.e_search.pack(side="left", padx=4)
         ctk.CTkButton(search_frame, text="🔍", width=40, command=self.search_livre).pack(side="left")
 
-        # Tableau droite
         table_frame = ctk.CTkFrame(self.tab_livres)
         table_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
@@ -128,13 +122,52 @@ class App(ctk.CTk):
         res = requests.get(f"{API}/livres/search?q={q}").json()
         self.load_livres(res)
 
-    # ─────────────────────────────────────────
-    #  ONGLET CHATBOT (placeholder étape 6)
-    # ─────────────────────────────────────────
     def build_chat_tab(self):
-        ctk.CTkLabel(self.tab_chat,
-                     text="🤖 Chatbot Mistral — disponible à l'étape 6",
-                     font=("Arial", 16)).pack(expand=True)
+        self.chat_history = ctk.CTkTextbox(self.tab_chat, state="disabled", font=("Arial", 13))
+        self.chat_history.pack(fill="both", expand=True, padx=10, pady=10)
+
+        bottom = ctk.CTkFrame(self.tab_chat)
+        bottom.pack(fill="x", padx=10, pady=6)
+
+        self.e_question = ctk.CTkEntry(bottom, placeholder_text="Posez votre question...", height=40)
+        self.e_question.pack(side="left", fill="x", expand=True, padx=(0,8))
+        self.e_question.bind("<Return>", lambda e: self.send_message())
+
+        ctk.CTkButton(bottom, text="Envoyer 🚀", width=120,
+                      command=self.send_message, fg_color="#2ecc71").pack(side="right")
+
+        self.append_chat("🤖 Mistral", "Bonjour ! Je suis votre assistant bibliothèque. Posez-moi une question sur les livres.")
+
+    def append_chat(self, sender, message):
+        self.chat_history.configure(state="normal")
+        self.chat_history.insert("end", f"{sender}:\n{message}\n\n")
+        self.chat_history.configure(state="disabled")
+        self.chat_history.see("end")
+
+    def send_message(self):
+        question = self.e_question.get().strip()
+        if not question:
+            return
+        self.append_chat("👤 Vous", question)
+        self.e_question.delete(0, "end")
+        self.append_chat("🤖 Mistral", "⏳ En train de réfléchir...")
+
+        def call_api():
+            try:
+                res = requests.post(
+                    "http://localhost:5000/api/chat",
+                    json={"question": question}
+                ).json()
+                reponse = res.get("reponse", "Pas de réponse.")
+            except:
+                reponse = "❌ Erreur : Flask API non accessible."
+            self.chat_history.configure(state="normal")
+            self.chat_history.delete("1.0", "end")
+            self.chat_history.configure(state="disabled")
+            self.append_chat("👤 Vous", question)
+            self.append_chat("🤖 Mistral", reponse)
+
+        threading.Thread(target=call_api, daemon=True).start()
 
 
 if __name__ == "__main__":
