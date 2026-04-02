@@ -298,7 +298,6 @@ Service de construction du prompt et appel Ollama.
 
 Interface desktop qui pilote l'API et affiche le catalogue.
 
-
 ## Depannage
 
 - Si l'API ne demarre pas, verifie `DATABASE_URL` et PostgreSQL.
