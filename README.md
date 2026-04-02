@@ -91,7 +91,7 @@ Exemple local:
 ```bash
 sudo -u postgres psql
 CREATE DATABASE library_db;
-CREATE USER mourad WITH PASSWORD 'mourad123';
+CREATE USER mourad WITH PASSWORD '';
 GRANT ALL PRIVILEGES ON DATABASE library_db TO mourad;
 \q
 ```
@@ -298,9 +298,6 @@ Service de construction du prompt et appel Ollama.
 
 Interface desktop qui pilote l'API et affiche le catalogue.
 
-### `seed.py`
-
-Script de remplissage initial de la table `livres`.
 
 ## Depannage
 
