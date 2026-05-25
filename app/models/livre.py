@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 
 import psycopg2
 from dotenv import load_dotenv
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env", encoding="utf-8-sig")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://mourad:mourad123@localhost/library_db")
 BOOK_COLUMNS = ("id", "titre", "auteur", "categorie", "annee", "quantite", "statut")
